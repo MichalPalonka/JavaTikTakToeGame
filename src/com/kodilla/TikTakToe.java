@@ -23,6 +23,9 @@ import java.util.Optional;
 public class TikTakToe extends Application {
     private boolean gameOn = true;
     private boolean turnX = true;
+    private boolean tie = false;
+    private boolean canMove = false;
+    private int moveCount;
     private Tile[][] board = new Tile[3][3];
     private List<WinCondition> conditionList = new ArrayList<>();
     Stage window;
@@ -61,9 +64,17 @@ public class TikTakToe extends Application {
         primaryStage.show();
     }
     private void checkStatus() {
+
         for (WinCondition condition : conditionList) {
+
             if (condition.gameEnd()) {
                 gameOn = false;
+                gameEndWindow(condition);
+                break;
+            }
+            if (moveCount == 9) {
+                gameOn = false;
+                tie = true;
                 gameEndWindow(condition);
                 break;
             }
@@ -77,9 +88,11 @@ public class TikTakToe extends Application {
         }else{
             winner = "X";
         }
+        if(tie)
+            winner = "No one";
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Play Again?");
-        alert.setHeaderText("Game end " + winner + " win.");
+        alert.setHeaderText("Game end. " + winner + " win.");
         alert.setContentText("Start New Game?");
 
         Optional<ButtonType> result = alert.showAndWait();
@@ -119,19 +132,23 @@ public class TikTakToe extends Application {
             setAlignment(Pos.CENTER);
 
             setOnMouseClicked(event -> {
-                if(!gameOn)
-                    return;
-                if (event.getButton() == MouseButton.PRIMARY) {
-                    if (!turnX) {
-                        text.setText("O");
-                        turnX = true;
-                        checkStatus();
-                    } else {
-                        text.setText("X");
-                        turnX = false;
-                        checkStatus();
+                    if (!gameOn)
+                        return;
+                    if (event.getButton() == MouseButton.PRIMARY) {
+                        if (!turnX) {
+                            if(canMove) {
+                                text.setText("O");
+                                turnX = true;
+                                moveCount += 1;
+                                checkStatus();
+                            }
+                        } else {
+                            text.setText("X");
+                            turnX = false;
+                            moveCount += 1;
+                            checkStatus();
+                        }
                     }
-                }
             });
             getChildren().addAll(rect, text);
         }
