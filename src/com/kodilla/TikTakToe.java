@@ -24,7 +24,6 @@ public class TikTakToe extends Application {
     private boolean gameOn = true;
     private boolean turnX = true;
     private boolean tie = false;
-    private boolean canMove = false;
     private int moveCount;
     private Tile[][] board = new Tile[3][3];
     private List<WinCondition> conditionList = new ArrayList<>();
@@ -136,13 +135,11 @@ public class TikTakToe extends Application {
                         return;
                     if (event.getButton() == MouseButton.PRIMARY) {
                         if (!turnX) {
-                            if(canMove) {
-                                text.setText("O");
-                                turnX = true;
-                                moveCount += 1;
-                                checkStatus();
-                            }
-                        } else {
+                            text.setText("O");
+                            turnX = true;
+                            moveCount += 1;
+                            checkStatus();
+                        }else{
                             text.setText("X");
                             turnX = false;
                             moveCount += 1;
