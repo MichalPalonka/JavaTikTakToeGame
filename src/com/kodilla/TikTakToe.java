@@ -22,14 +22,18 @@ import java.util.Optional;
 
 public class TikTakToe extends Application {
     private boolean gameOn = true;
-    private boolean turnX = true;
     private boolean tie = false;
-    private int moveCount;
+    private String winner;
+    private String turn = "X";
+    private int moveCount = 0;
+    private int a;
+    private int b;
     private Tile[][] board = new Tile[3][3];
     private List<WinCondition> conditionList = new ArrayList<>();
-    Stage window;
+    private Stage window;
 
-    Pane root = new Pane();
+    private Pane root = new Pane();
+
     private Parent createParent() {
         root.setPrefSize(605, 605);
 
@@ -44,10 +48,10 @@ public class TikTakToe extends Application {
             }
         }
 
-        for(int y = 0; y < 3; y++){
+        for (int y = 0; y < 3; y++) {
             conditionList.add(new WinCondition(board[0][y], board[1][y], board[2][y]));
         }
-        for(int x = 0; x< 3; x++) {
+        for (int x = 0; x < 3; x++) {
             conditionList.add(new WinCondition(board[x][0], board[x][1], board[x][2]));
         }
 
@@ -62,42 +66,44 @@ public class TikTakToe extends Application {
         primaryStage.setScene(new Scene(createParent()));
         primaryStage.show();
     }
-    private void checkStatus() {
 
+    private void checkStatus() {
+        moveCount += 1;
         for (WinCondition condition : conditionList) {
 
             if (condition.gameEnd()) {
                 gameOn = false;
-                gameEndWindow(condition);
+                gameEndWindow();
                 break;
             }
-            if (moveCount == 9) {
-                gameOn = false;
-                tie = true;
-                gameEndWindow(condition);
-                break;
-            }
+        }
+        if (moveCount == 9) {
+            gameOn = false;
+            tie = true;
+            gameEndWindow();
         }
     }
 
-    private void gameEndWindow(WinCondition condition) {
-        String winner;
-        if(turnX) {
+    private void gameEndWindow() {
+
+        if (turn.equals("O")) {
             winner = "O";
-        }else{
+        } else {
             winner = "X";
         }
-        if(tie)
+        if (tie)
             winner = "No one";
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Play Again?");
         alert.setHeaderText("Game end. " + winner + " win.");
         alert.setContentText("Start New Game?");
+        turn = "X";
+        moveCount = 0;
 
         Optional<ButtonType> result = alert.showAndWait();
-        if (result.get() == ButtonType.OK){
+        if (result.get() == ButtonType.OK) {
             window.close();
-            Platform.runLater( () -> new TikTakToe().start( new Stage() ) );
+            Platform.runLater(() -> new TikTakToe().start(new Stage()));
         } else {
             Platform.exit();
         }
@@ -105,14 +111,26 @@ public class TikTakToe extends Application {
 
     private class WinCondition {
         private Tile[] tiles;
-        public WinCondition(Tile... tiles) {
+
+        private WinCondition(Tile... tiles) {
             this.tiles = tiles;
         }
-        public boolean gameEnd() {
+
+        private boolean gameEnd() {
             if (tiles[0].getValue().isEmpty())
                 return false;
             return tiles[0].getValue().equals(tiles[1].getValue())
                     && tiles[0].getValue().equals(tiles[2].getValue());
+        }
+    }
+
+    private void CPUTurn() {
+        double x = Math.floor(Math.random() * 3);
+        double y = Math.floor(Math.random() * 3);
+        a = (int) x;
+        b = (int) y;
+        if (!board[a][b].getValue().isEmpty()) {
+            CPUTurn();
         }
     }
 
@@ -123,7 +141,8 @@ public class TikTakToe extends Application {
     private class Tile extends StackPane {
         Text text = new Text();
 
-        public Tile() {
+        private Tile() {
+            final String[] canClick = {"t"};
             Rectangle rect = new Rectangle(200, 200, Color.SNOW);
             rect.setStroke(Color.BLACK);
             rect.setStrokeWidth(5);
@@ -131,27 +150,31 @@ public class TikTakToe extends Application {
             setAlignment(Pos.CENTER);
 
             setOnMouseClicked(event -> {
-                    if (!gameOn)
-                        return;
-                    if (event.getButton() == MouseButton.PRIMARY) {
-                        if (!turnX) {
-                            text.setText("O");
-                            turnX = true;
-                            moveCount += 1;
+                if (!gameOn)
+                    return;
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    if (getValue().isEmpty()) {
+                        if (canClick[0].equals("t")) {
+                            text.setText(turn);
+                            canClick[0] = "f";
                             checkStatus();
-                        }else{
-                            text.setText("X");
-                            turnX = false;
-                            moveCount += 1;
-                            checkStatus();
+                            turn = "O";
+                            if (winner == null) {
+                                CPUTurn();
+                                board[a][b].text.setText(turn);
+                                checkStatus();
+                                turn = "X";
+                            }
                         }
+
                     }
+                }
             });
             getChildren().addAll(rect, text);
         }
-        public String getValue() {
+
+        private String getValue() {
             return text.getText();
         }
     }
-
 }
